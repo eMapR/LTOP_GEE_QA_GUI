@@ -1,22 +1,12 @@
 //######################################################################################################## 
 //#                                                                                                    #\\
-//#                             LANDTRENDR PIXEL TIME SERIES PLOTTER GUI                               #\\
+//#                             LTOP PIXEL TIME SERIES PLOTTER GUI                               #\\
 //#                                                                                                    #\\
 //########################################################################################################
 
-
-// date: 2018-06-11
-// author: Justin Braaten | jstnbraaten@gmail.com
-//         Zhiqiang Yang  | zhiqiang.yang@oregonstate.edu
-//         Robert Kennedy | rkennedy@coas.oregonstate.edu
-//mutator: Peter Clary    | clarype@oregonstate.edu
-// website: https://github.com/eMapR/LT-GEE
-
-
-
 // import param file 
 var params = require('users/clarype/LTOP_QA:params.js')
-print(params)
+
 // LandTrendr Mod
 var ltgee = require('users/emaprlab/public:Modules/LandTrendr.js');  
 
@@ -33,10 +23,8 @@ function get_cluster_info(point,img,table){
     geometry: point,
     scale: 30
   }).getNumber('cluster');
-  //print('cluster id from Kmeans image',pix)
   // filter table with pixel value
   var feat = table.filter(ee.Filter.eq('cluster_id', pix))
-  //print('look up feature cluster_id',feat.first().get("cluster_id"))
   // return feature info
   return feat
 }
@@ -95,24 +83,6 @@ function buildLTOPcompsIC(startYear,endYear){
 return servir_ic; 
 }
 
-// function to get LT parameter setting
-var getParams = function(){
-  var prevOneYrRec = paramBoxes[3].getValue();
-  if(typeof(prevOneYrRec) !== "boolean"){
-    prevOneYrRec = prevOneYrRec.toLowerCase() != 'false';
-  }
-  
-  return { 
-    maxSegments:              parseInt(paramBoxes[0].getValue()),
-    spikeThreshold:         parseFloat(paramBoxes[1].getValue()),
-    vertexCountOvershoot:     parseInt(paramBoxes[2].getValue()),
-    preventOneYearRecovery:                         prevOneYrRec,
-    recoveryThreshold:      parseFloat(paramBoxes[4].getValue()),
-    pvalThreshold:          parseFloat(paramBoxes[5].getValue()),
-    bestModelProportion:    parseFloat(paramBoxes[6].getValue()),
-    minObservationsNeeded:    parseInt(paramBoxes[7].getValue())
-  };
-};
 
 // RETURN LT RESULTS FOR A SINGLE PIXEL AS AN OBJECT
 var ltPixelTimeSeries = function(img, pixel) {
@@ -162,14 +132,8 @@ var ltPixelTimeSeriesArray = function(servir_vert,lt, pixel, indexFlip){
 // function to create a plot of source and fitted time series
 var chartPoint = function(ser,lt, pixel, index, indexFlip, named) {
   var pixelTimeSeriesData = ltPixelTimeSeriesArray(ser,lt, pixel, indexFlip);
-  //print(pixelTimeSeriesData)
-  //print(named)
   return ui.Chart(pixelTimeSeriesData.ts, 'ComboChart',
             {
-              //error//'title' : +named.getInfo()+' Index: '+index + ' | Fit RMSE: '+ (Math.round(pixelTimeSeriesData.rmse * 100) / 100).toString(),
-              //NaN//'title' : +ee.String(named).getInfo()+' Index: '+index + ' | Fit RMSE: '+ (Math.round(pixelTimeSeriesData.rmse * 100) / 100).toString(),
-              //NaN//'title' : +named+' Index: '+index + ' | Fit RMSE: '+ (Math.round(pixelTimeSeriesData.rmse * 100) / 100).toString(),
-              //NaN//'title' : +"Clicked Point"+' Index: '+index + ' | Fit RMSE: '+ (Math.round(pixelTimeSeriesData.rmse * 100) / 100).toString(),
               'title' : named +': Index: '+index + ' | Fit RMSE: '+ (Math.round(pixelTimeSeriesData.rmse * 100) / 100).toString(),
               'hAxis': {'format':'####'},
               'vAxis':{'maxValue': 1000,'minValue': -1000 },
@@ -181,12 +145,32 @@ var chartPoint = function(ser,lt, pixel, index, indexFlip, named) {
                 }
 })};
 
+// function to get LT parameter setting
+var getParams = function(){
+  var prevOneYrRec = paramBoxes[3].getValue();
+  print('jo', prevOneYrRec)
+  if(typeof(prevOneYrRec) !== "boolean"){
+    prevOneYrRec = prevOneYrRec.toLowerCase() != 'false';
+  }
+  
+  return { 
+    maxSegments:              parseInt(paramBoxes[0].getValue()),
+    spikeThreshold:         parseFloat(paramBoxes[1].getValue()),
+    vertexCountOvershoot:     parseInt(paramBoxes[2].getValue()),
+    preventOneYearRecovery:                         prevOneYrRec,
+    recoveryThreshold:      parseFloat(paramBoxes[4].getValue()),
+    pvalThreshold:          parseFloat(paramBoxes[5].getValue()),
+    bestModelProportion:    parseFloat(paramBoxes[6].getValue()),
+    minObservationsNeeded:    parseInt(paramBoxes[7].getValue())
+  };
+};
+
 
 // function to draw plots of source and fitted time series to panel
 var plotTimeSeries = function(x, y){  
   // clear the plot panel
   plotPanel = plotPanel.clear();
-  selectedParamplotPanel = selectedParamplotPanel.clear();
+  //selectedParamplotPanel = selectedParamplotPanel.clear();
   //map.remove(optimized_output)
   
   // get cluster id from cluster image at point and get coorsponding feature with selected landtrendr parameter for that cluster id
@@ -194,6 +178,7 @@ var plotTimeSeries = function(x, y){
   // mutate feature collection properties into a dictionary with LT parameters, index and cluster id 
   var selected_lt = get_selected_params(tab)
   print(selected_lt.get("cluster_id"))
+  
   var k_feat = params.param.kmeans_pts.filter(ee.Filter.eq('cluster',selected_lt.get("cluster_id"))).first()
   print('k_feat',k_feat)
   // make mask for cluster_id
@@ -241,30 +226,7 @@ var plotTimeSeries = function(x, y){
   });
 
   
-  
-  var index_selected = ee.String(selected_lt.getString('index')).getInfo()
-  var maxSegments_selected = ee.Number(selected_lt.get('maxSegments')).getInfo()
-  var spikeThreshold_selected = ee.Number(selected_lt.get('spikeThreshold')).getInfo()
-  var vertexCountOvershoot_selected = ee.Number(selected_lt.get('vertexCountOvershoot')).getInfo()
-  var preventOneYearRecovery_selected = selected_lt.get('preventOneYearRecovery').getInfo()
-  var recoveryThreshold_selected = ee.Number(selected_lt.get('recoveryThreshold')).getInfo()
-  var pvalThreshold_selected = ee.Number(selected_lt.get('pvalThreshold')).getInfo()
-  var minObservationsNeeded_selected = ee.Number(selected_lt.get('minObservationsNeeded')).getInfo()
-  var bestModelProportion_selected = ee.Number(selected_lt.get('bestModelProportion')).getInfo()
-  var cluster_k = ee.Number(selected_lt.get('cluster_id')).getInfo()
 
-
-  //print("selected index", eindex_selected))
-  selectedParamplotPanel.add(ui.Label("cluster id: "+cluster_k)) 
-  selectedParamplotPanel.add(ui.Label("index: "+index_selected))    
-  selectedParamplotPanel.add(ui.Label("maxSegments: "+maxSegments_selected))
-  selectedParamplotPanel.add(ui.Label("spikeThresholdspikeThreshold: "+spikeThreshold_selected))
-  selectedParamplotPanel.add(ui.Label("vertexCountOvershoot: "+vertexCountOvershoot_selected))
-  selectedParamplotPanel.add(ui.Label("preventOneYearRecovery: "+preventOneYearRecovery_selected))
-  selectedParamplotPanel.add(ui.Label("recoveryThreshold: "+recoveryThreshold_selected))
-  selectedParamplotPanel.add(ui.Label("pvalThreshold: "+pvalThreshold_selected))
-  selectedParamplotPanel.add(ui.Label("bestModelProportion: "+bestModelProportion_selected))
-  selectedParamplotPanel.add(ui.Label("minObservationsNeeded: "+minObservationsNeeded_selected))
 
 };
 
@@ -297,32 +259,11 @@ var servir_comp = buildSERVIRcompsIC(1990,2021).select(['blue','green','red','ni
 var LTOPcollection = buildLTOPcompsIC(2016,2021)//.select(['blue','green','red','nir','swir1','swir2'],['B1','B2','B3','B4','B5','B7'])//.geometry()
 
 //these are the stabilized composites
-var reservoir_2011 = ee.Image('users/ak_glaciers/Cambodia_troubleshooting_tc/cambodia_2011_stabilized_reservoir_Cambodia')
-var reservoir_2012 = ee.Image('users/ak_glaciers/Cambodia_troubleshooting_tc/cambodia_2012_stabilized_reservoir_Cambodia')
-var reservoir_2013 = ee.Image('users/ak_glaciers/Cambodia_troubleshooting_tc/cambodia_2013_stabilized_reservoir_Cambodia')
-var reservoir_2014 = ee.Image('users/ak_glaciers/Cambodia_troubleshooting_tc/cambodia_2014_stabilized_reservoir_Cambodia')
-var reservoir_2015 = ee.Image('users/ak_glaciers/Cambodia_troubleshooting_tc/cambodia_2015_stabilized_reservoir_Cambodia')
-var reservoir_2016 = ee.Image('users/ak_glaciers/Cambodia_troubleshooting_tc/cambodia_2016_stabilized_reservoir_Cambodia')
-var reservoir_2017 = ee.Image('users/ak_glaciers/Cambodia_troubleshooting_tc/cambodia_2017_stabilized_reservoir_Cambodia')
-var reservoir_2018 = ee.Image('users/ak_glaciers/Cambodia_troubleshooting_tc/cambodia_2018_stabilized_reservoir_Cambodia')
-var reservoir_2019 = ee.Image('users/ak_glaciers/Cambodia_troubleshooting_tc/cambodia_2019_stabilized_reservoir_Cambodia')
-var reservoir_2020 = ee.Image('users/ak_glaciers/Cambodia_troubleshooting_tc/cambodia_2020_stabilized_reservoir_Cambodia')
-var reservoir_2021 = ee.Image('users/ak_glaciers/Cambodia_troubleshooting_tc/cambodia_2021_stabilized_reservoir_Cambodia')
-
+var ltop = params.param.ltopStack.toBands()
 
 //original servir composites 
-var ser_2011 = ee.Image("projects/servir-mekong/composites/2011");
-var ser_2012 = ee.Image("projects/servir-mekong/composites/2012");
-var ser_2013 = ee.Image("projects/servir-mekong/composites/2013");
-var ser_2014 = ee.Image("projects/servir-mekong/composites/2014");
-var ser_2015 = ee.Image("projects/servir-mekong/composites/2015");
-var ser_2016 = ee.Image("projects/servir-mekong/composites/2016");
-var ser_2017 = ee.Image("projects/servir-mekong/composites/2017");
-var ser_2018 = ee.Image("projects/servir-mekong/composites/2018");
-var ser_2019 = ee.Image("projects/servir-mekong/composites/2019");
-var ser_2020 = ee.Image("projects/servir-mekong/composites/2020");
-var ser_2021 = ee.Image("projects/servir-mekong/composites/2021");
-
+var servir = params.param.servirStack.toBands()
+print(servir)
 // map panel
 var map = ui.Map();
 map.style().set({cursor:'crosshair'});
@@ -335,35 +276,36 @@ map.setCenter(106.3, 13.5, 12);
 //map.layers().set(0,ui.Map.Layer(optimized_output,{min:1990,max:2021},"SERVIR Vertex Image",0))
 map.layers().set(1,ui.Map.Layer(params.param.kmeans_img,{"opacity":1,"min":0,"max":200,"palette":["ff0000","fff800","0fff00","002aff","fc00ff"]},"Kmeans Image",0))
 
-map.layers().set(2,ui.Map.Layer(reservoir_2011,{min:0,max:6000,bands:['B5_fit','B4_fit','B3_fit']},'2011',0))
-map.layers().set(3,ui.Map.Layer(reservoir_2012,{min:0,max:6000,bands:['B5_fit','B4_fit','B3_fit']},'2012',0))
-map.layers().set(4,ui.Map.Layer(reservoir_2013,{min:0,max:6000,bands:['B5_fit','B4_fit','B3_fit']},'2013',0))
-map.layers().set(5,ui.Map.Layer(reservoir_2014,{min:0,max:6000,bands:['B5_fit','B4_fit','B3_fit']},'2014',0))
-map.layers().set(6,ui.Map.Layer(reservoir_2015,{min:0,max:6000,bands:['B5_fit','B4_fit','B3_fit']},'2015',0))
-map.layers().set(7,ui.Map.Layer(reservoir_2016,{min:0,max:6000,bands:['B5_fit','B4_fit','B3_fit']},'2016',0))
-map.layers().set(8,ui.Map.Layer(reservoir_2017,{min:0,max:6000,bands:['B5_fit','B4_fit','B3_fit']},'2017',0))
-map.layers().set(9,ui.Map.Layer(reservoir_2018,{min:0,max:6000,bands:['B5_fit','B4_fit','B3_fit']},'2018',1))
-map.layers().set(10,ui.Map.Layer(reservoir_2019,{min:0,max:6000,bands:['B5_fit','B4_fit','B3_fit']},'2019',0))
-map.layers().set(11,ui.Map.Layer(reservoir_2020,{min:0,max:6000,bands:['B5_fit','B4_fit','B3_fit']},'2020',0))
-map.layers().set(12,ui.Map.Layer(reservoir_2021,{min:0,max:6000,bands:['B5_fit','B4_fit','B3_fit']},'2021',0))
+map.layers().set(2,ui.Map.Layer(ltop,{min:0,max:6000,bands:['0_B5_fit','0_B4_fit','0_B3_fit']},'2011',0))
+map.layers().set(3,ui.Map.Layer(ltop,{min:0,max:6000,bands:['1_B5_fit','1_B4_fit','1_B3_fit']},'2012',0))
+map.layers().set(4,ui.Map.Layer(ltop,{min:0,max:6000,bands:['2_B5_fit','2_B4_fit','2_B3_fit']},'2013',0))
+map.layers().set(5,ui.Map.Layer(ltop,{min:0,max:6000,bands:['3_B5_fit','3_B4_fit','3_B3_fit']},'2014',0))
+map.layers().set(6,ui.Map.Layer(ltop,{min:0,max:6000,bands:['4_B5_fit','4_B4_fit','4_B3_fit']},'2015',0))
+map.layers().set(7,ui.Map.Layer(ltop,{min:0,max:6000,bands:['5_B5_fit','5_B4_fit','5_B3_fit']},'2016',0))
+map.layers().set(8,ui.Map.Layer(ltop,{min:0,max:6000,bands:['6_B5_fit','6_B4_fit','6_B3_fit']},'2017',0))
+map.layers().set(9,ui.Map.Layer(ltop,{min:0,max:6000,bands:['7_B5_fit','7_B4_fit','7_B3_fit']},'2018',1))
+map.layers().set(10,ui.Map.Layer(ltop,{min:0,max:6000,bands:['8_B5_fit','8_B4_fit','8_B3_fit']},'2019',0))
+map.layers().set(11,ui.Map.Layer(ltop,{min:0,max:6000,bands:['9_B5_fit','9_B4_fit','9_B3_fit']},'2020',0))
+map.layers().set(12,ui.Map.Layer(ltop,{min:0,max:6000,bands:['10_B5_fit','10_B4_fit','10_B3_fit']},'2021',0))
 
-map.layers().set(13,ui.Map.Layer(ser_2011,{min:0,max:6000,bands:['swir1','nir','red']},'2011 ser',0));
-map.layers().set(14,ui.Map.Layer(ser_2012,{min:0,max:6000,bands:['swir1','nir','red']},'2012 ser',0));
-map.layers().set(15,ui.Map.Layer(ser_2013,{min:0,max:6000,bands:['swir1','nir','red']},'2013 ser',0));
-map.layers().set(16,ui.Map.Layer(ser_2014,{min:0,max:6000,bands:['swir1','nir','red']},'2014 ser',0));
-map.layers().set(17,ui.Map.Layer(ser_2015,{min:0,max:6000,bands:['swir1','nir','red']},'2015 ser',0));
-map.layers().set(18,ui.Map.Layer(ser_2016,{min:0,max:6000,bands:['swir1','nir','red']},'2016 ser',0));
-map.layers().set(19,ui.Map.Layer(ser_2017,{min:0,max:6000,bands:['swir1','nir','red']},'2017 ser',0));
-map.layers().set(20,ui.Map.Layer(ser_2018,{min:0,max:6000,bands:['swir1','nir','red']},'2018 ser',1));
-map.layers().set(21,ui.Map.Layer(ser_2019,{min:0,max:6000,bands:['swir1','nir','red']},'2019 ser',0));
-map.layers().set(22,ui.Map.Layer(ser_2020,{min:0,max:6000,bands:['swir1','nir','red']},'2020 ser',0));
-map.layers().set(23,ui.Map.Layer(ser_2021,{min:0,max:6000,bands:['swir1','nir','red']},'2021 ser',0));
+map.layers().set(13,ui.Map.Layer(servir,{min:0,max:6000,bands:['2011_swir1','2011_nir','2011_red']},'2011 ser',0));
+map.layers().set(14,ui.Map.Layer(servir,{min:0,max:6000,bands:['2012_swir1','2012_nir','2012_red']},'2012 ser',0));
+map.layers().set(15,ui.Map.Layer(servir,{min:0,max:6000,bands:['2013_swir1','2013_nir','2013_red']},'2013 ser',0));
+map.layers().set(16,ui.Map.Layer(servir,{min:0,max:6000,bands:['2014_swir1','2014_nir','2014_red']},'2014 ser',0));
+map.layers().set(17,ui.Map.Layer(servir,{min:0,max:6000,bands:['2015_swir1','2015_nir','2015_red']},'2015 ser',0));
+map.layers().set(18,ui.Map.Layer(servir,{min:0,max:6000,bands:['2016_swir1','2016_nir','2016_red']},'2016 ser',0));
+map.layers().set(19,ui.Map.Layer(servir,{min:0,max:6000,bands:['2017_swir1','2017_nir','2017_red']},'2017 ser',0));
+map.layers().set(20,ui.Map.Layer(servir,{min:0,max:6000,bands:['2018_swir1','2018_nir','2018_red']},'2018 ser',1));
+map.layers().set(21,ui.Map.Layer(servir,{min:0,max:6000,bands:['2019_swir1','2019_nir','2019_red']},'2019 ser',0));
+map.layers().set(22,ui.Map.Layer(servir,{min:0,max:6000,bands:['2020_swir1','2020_nir','2020_red']},'2020 ser',0));
+map.layers().set(23,ui.Map.Layer(servir,{min:0,max:6000,bands:['2021_swir1','2021_nir','2021_red']},'2021 ser',0));
 
 // index panel
 var indexList = [['NBR',-1], ['NDVI',-1], ['EVI',-1], ['NDMI',-1], ['TCB',1], ['TCG',-1],
                  ['TCW',-1], ['TCA' ,-1], ['B1' ,1], ['B2' , 1],
                  ['B3' , 1], ['B4'  ,-1], ['B5'  , 1], ['B7' ,1]];
 
+print(ee.List(ee.List(indexList).unzip().get(0)).indexOf("NDMI"))//.contains("NBR"))
 var indexBox = [];
 indexList.forEach(function(name, index) {
   var checkBox = ui.Checkbox(name[0]);
@@ -381,18 +323,18 @@ var indexPanel = ui.Panel(
   ui.Panel.Layout.Flow('horizontal'), {stretch: 'horizontal'}
 );
 
-indexBox[0].setValue(1);
+
 
 
 // coordinate panel
 var coordSectionLabel = ui.Label('Define Pixel Coordinates (optional)',{fontWeight: 'bold'});
 
 var latLabel = ui.Label('Latitude:');
-var latBox = ui.Textbox({value:43.7929});
+var latBox = ui.Textbox({value:13.50});
 latBox.style().set('stretch', 'horizontal');
 
 var lonLabel = ui.Label('Longitude:');
-var lonBox = ui.Textbox({value:-122.8848});
+var lonBox = ui.Textbox({value:106.32});
 lonBox.style().set('stretch', 'horizontal');
 
 var latLonPanel = ui.Panel(
@@ -421,7 +363,8 @@ var paramBoxes = [];
 var paramPanels = [ui.Label('Define Segmentation Parameters',{fontWeight: 'bold'})];
 runParams.forEach(function(param, index){
   var paramLabel = ui.Label(param.label);
-  var paramBox = ui.Textbox({value:param.value});
+  //var paramBox = ui.Textbox({value:param.value});
+  var paramBox = ui.Textbox();
   paramBox.style().set('stretch', 'horizontal');
   var paramPanel = ui.Panel([paramLabel,paramBox], ui.Panel.Layout.Flow('horizontal'));
   paramBoxes.push(paramBox);
@@ -430,15 +373,9 @@ runParams.forEach(function(param, index){
 
 var paramPanel = ui.Panel(paramPanels,null,{stretch: 'horizontal'});
 
-
 // submit panel
 var submitButton = ui.Button({label: 'Submit'});
 submitButton.style().set('stretch', 'horizontal');
-
-
-
-
-
 
 //####################################################################################
 //########### BIND FUNCTIONS TO ACTIONS ##############################################
@@ -450,8 +387,53 @@ map.onClick(function(coords) {
   var y = coords.lat;
   lonBox.setValue(x);
   latBox.setValue(y);
+  
+  var tab = get_cluster_info( ee.Geometry.Point([x,y]),params.param.kmeans_img,params.param.selected_params)
+  var selectedParams = get_selected_params(tab)
+  print(selectedParams) 
+    
+  var index_selected = ee.String(selectedParams.getString('index')).getInfo()
+  print(index_selected)
+  print(ee.List(indexList).flatten().indexOf(index_selected))
+  var ind = ee.List(ee.List(indexList).unzip().get(0)).indexOf(index_selected)
+  var maxSegments_selected = ee.Number(selectedParams.get('maxSegments')).getInfo()
+  var spikeThreshold_selected = ee.Number(selectedParams.get('spikeThreshold')).getInfo()
+  var vertexCountOvershoot_selected = ee.Number(selectedParams.get('vertexCountOvershoot')).getInfo()
+  var preventOneYearRecovery_selected = selectedParams.get('preventOneYearRecovery').getInfo()
+  var recoveryThreshold_selected = ee.Number(selectedParams.get('recoveryThreshold')).getInfo()
+  var pvalThreshold_selected = ee.Number(selectedParams.get('pvalThreshold')).getInfo()
+  var minObservationsNeeded_selected = ee.Number(selectedParams.get('minObservationsNeeded')).getInfo()
+  var bestModelProportion_selected = ee.Number(selectedParams.get('bestModelProportion')).getInfo()
+  var cluster_k = ee.Number(selectedParams.get('cluster_id')).getInfo()
+  print(ind)
+  indexBox[ind.getInfo()].setValue(1);
+
+  //print("selected index", eindex_selected))
+  selectedParamplotPanel.add(ui.Label("cluster id: "+cluster_k)) 
+  selectedParamplotPanel.add(ui.Label("index: "+index_selected))    
+  selectedParamplotPanel.add(ui.Label("maxSegments: "+maxSegments_selected))
+  selectedParamplotPanel.add(ui.Label("spikeThresholdspikeThreshold: "+spikeThreshold_selected))
+  selectedParamplotPanel.add(ui.Label("vertexCountOvershoot: "+vertexCountOvershoot_selected))
+  selectedParamplotPanel.add(ui.Label("preventOneYearRecovery: "+preventOneYearRecovery_selected))
+  selectedParamplotPanel.add(ui.Label("recoveryThreshold: "+recoveryThreshold_selected))
+  selectedParamplotPanel.add(ui.Label("pvalThreshold: "+pvalThreshold_selected))
+  selectedParamplotPanel.add(ui.Label("bestModelProportion: "+bestModelProportion_selected))
+  selectedParamplotPanel.add(ui.Label("minObservationsNeeded: "+minObservationsNeeded_selected))
+  
+    // add selected values to selectable lt param text box 
+  paramPanel.widgets().get(1).widgets().get(1).setValue(maxSegments_selected)
+  paramPanel.widgets().get(2).widgets().get(1).setValue(spikeThreshold_selected)
+  paramPanel.widgets().get(3).widgets().get(1).setValue(vertexCountOvershoot_selected)
+  paramPanel.widgets().get(4).widgets().get(1).setValue(preventOneYearRecovery_selected)
+  paramPanel.widgets().get(5).widgets().get(1).setValue(recoveryThreshold_selected)
+  paramPanel.widgets().get(6).widgets().get(1).setValue(pvalThreshold_selected)
+  paramPanel.widgets().get(7).widgets().get(1).setValue(bestModelProportion_selected)
+  paramPanel.widgets().get(8).widgets().get(1).setValue(minObservationsNeeded_selected)
+  
   runParams = getParams();
   plotTimeSeries(x, y);
+
+
 
 
 });
@@ -461,6 +443,44 @@ map.onClick(function(coords) {
 submitButton.onClick(function(){
   var x = parseFloat(lonBox.getValue());
   var y = parseFloat(latBox.getValue());
+
+  // var tab = get_cluster_info( ee.Geometry.Point([x,y]),params.param.kmeans_img,params.param.selected_params)
+  // var selectedParams = get_selected_params(tab)
+  // print(selectedParams) 
+    
+  // var index_selected = ee.String(selectedParams.getString('index')).getInfo()
+  // var maxSegments_selected = ee.Number(selectedParams.get('maxSegments')).getInfo()
+  // var spikeThreshold_selected = ee.Number(selectedParams.get('spikeThreshold')).getInfo()
+  // var vertexCountOvershoot_selected = ee.Number(selectedParams.get('vertexCountOvershoot')).getInfo()
+  // var preventOneYearRecovery_selected = selectedParams.get('preventOneYearRecovery').getInfo()
+  // var recoveryThreshold_selected = ee.Number(selectedParams.get('recoveryThreshold')).getInfo()
+  // var pvalThreshold_selected = ee.Number(selectedParams.get('pvalThreshold')).getInfo()
+  // var minObservationsNeeded_selected = ee.Number(selectedParams.get('minObservationsNeeded')).getInfo()
+  // var bestModelProportion_selected = ee.Number(selectedParams.get('bestModelProportion')).getInfo()
+  // var cluster_k = ee.Number(selectedParams.get('cluster_id')).getInfo()
+
+
+  // //print("selected index", eindex_selected))
+  // selectedParamplotPanel.add(ui.Label("cluster id: "+cluster_k)) 
+  // selectedParamplotPanel.add(ui.Label("index: "+index_selected))    
+  // selectedParamplotPanel.add(ui.Label("maxSegments: "+maxSegments_selected))
+  // selectedParamplotPanel.add(ui.Label("spikeThresholdspikeThreshold: "+spikeThreshold_selected))
+  // selectedParamplotPanel.add(ui.Label("vertexCountOvershoot: "+vertexCountOvershoot_selected))
+  // selectedParamplotPanel.add(ui.Label("preventOneYearRecovery: "+preventOneYearRecovery_selected))
+  // selectedParamplotPanel.add(ui.Label("recoveryThreshold: "+recoveryThreshold_selected))
+  // selectedParamplotPanel.add(ui.Label("pvalThreshold: "+pvalThreshold_selected))
+  // selectedParamplotPanel.add(ui.Label("bestModelProportion: "+bestModelProportion_selected))
+  // selectedParamplotPanel.add(ui.Label("minObservationsNeeded: "+minObservationsNeeded_selected))
+  
+  //   // add selected values to selectable lt param text box 
+  // paramPanel.widgets().get(1).widgets().get(1).setValue(maxSegments_selected)
+  // paramPanel.widgets().get(2).widgets().get(1).setValue(spikeThreshold_selected)
+  // paramPanel.widgets().get(3).widgets().get(1).setValue(vertexCountOvershoot_selected)
+  // paramPanel.widgets().get(4).widgets().get(1).setValue(preventOneYearRecovery_selected)
+  // paramPanel.widgets().get(5).widgets().get(1).setValue(recoveryThreshold_selected)
+  // paramPanel.widgets().get(6).widgets().get(1).setValue(pvalThreshold_selected)
+  // paramPanel.widgets().get(7).widgets().get(1).setValue(bestModelProportion_selected)
+  // paramPanel.widgets().get(8).widgets().get(1).setValue(minObservationsNeeded_selected)
 
   runParams = getParams();
   plotTimeSeries(x, y);
