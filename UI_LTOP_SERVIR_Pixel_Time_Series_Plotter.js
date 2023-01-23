@@ -15,8 +15,8 @@
 
 
 // import param file 
-var config = require('users/clarype/LTOP_QA:params.js')
-print(config)
+var params = require('users/clarype/LTOP_QA:params.js')
+print(params)
 // LandTrendr Mod
 var ltgee = require('users/emaprlab/public:Modules/LandTrendr.js');  
 
@@ -190,16 +190,16 @@ var plotTimeSeries = function(x, y){
   //map.remove(optimized_output)
   
   // get cluster id from cluster image at point and get coorsponding feature with selected landtrendr parameter for that cluster id
-  var tab = get_cluster_info( ee.Geometry.Point([x,y]),config.param.kmeans_img,config.param.selected_params)
+  var tab = get_cluster_info( ee.Geometry.Point([x,y]),params.param.kmeans_img,params.param.selected_params)
   // mutate feature collection properties into a dictionary with LT parameters, index and cluster id 
   var selected_lt = get_selected_params(tab)
   print(selected_lt.get("cluster_id"))
-  var k_feat = config.param.kmeans_pts.filter(ee.Filter.eq('cluster',selected_lt.get("cluster_id"))).first()
+  var k_feat = params.param.kmeans_pts.filter(ee.Filter.eq('cluster',selected_lt.get("cluster_id"))).first()
   print('k_feat',k_feat)
   // make mask for cluster_id
-  var mask = config.param.kmeans_img.expression(
+  var mask = params.param.kmeans_img.expression(
     "band == "+selected_lt.get("cluster_id").getInfo().toString() +" ? 1 : 0", {
-      'band': config.param.kmeans_img.select('cluster'),
+      'band': params.param.kmeans_img.select('cluster'),
   }).not().selfMask();
   
   // make geometry for feature 
@@ -231,10 +231,10 @@ var plotTimeSeries = function(x, y){
     runParams.timeSeries = annualLTcollection;
     var lt = ee.Algorithms.TemporalSegmentation.LandTrendr(runParams);
     
-    var chart = chartPoint(config.param.optimized_output, lt, pixel, name[0], name[1], "Clicked Point");
+    var chart = chartPoint(params.param.optimized_output, lt, pixel, name[0], name[1], "Clicked Point");
     plotPanel.add(chart);
     
-    var chart2 = chartPoint(config.param.optimized_output, lt, pixel_kp, name[0], name[1], "Kmean Rep Point");
+    var chart2 = chartPoint(params.param.optimized_output, lt, pixel_kp, name[0], name[1], "Kmean Rep Point");
     plotPanel.add(chart2);
     
 
@@ -298,11 +298,30 @@ var LTOPcollection = buildLTOPcompsIC(2016,2021)//.select(['blue','green','red',
 
 //these are the stabilized composites
 var reservoir_2011 = ee.Image('users/ak_glaciers/Cambodia_troubleshooting_tc/cambodia_2011_stabilized_reservoir_Cambodia')
-
+var reservoir_2012 = ee.Image('users/ak_glaciers/Cambodia_troubleshooting_tc/cambodia_2012_stabilized_reservoir_Cambodia')
+var reservoir_2013 = ee.Image('users/ak_glaciers/Cambodia_troubleshooting_tc/cambodia_2013_stabilized_reservoir_Cambodia')
+var reservoir_2014 = ee.Image('users/ak_glaciers/Cambodia_troubleshooting_tc/cambodia_2014_stabilized_reservoir_Cambodia')
+var reservoir_2015 = ee.Image('users/ak_glaciers/Cambodia_troubleshooting_tc/cambodia_2015_stabilized_reservoir_Cambodia')
+var reservoir_2016 = ee.Image('users/ak_glaciers/Cambodia_troubleshooting_tc/cambodia_2016_stabilized_reservoir_Cambodia')
+var reservoir_2017 = ee.Image('users/ak_glaciers/Cambodia_troubleshooting_tc/cambodia_2017_stabilized_reservoir_Cambodia')
+var reservoir_2018 = ee.Image('users/ak_glaciers/Cambodia_troubleshooting_tc/cambodia_2018_stabilized_reservoir_Cambodia')
+var reservoir_2019 = ee.Image('users/ak_glaciers/Cambodia_troubleshooting_tc/cambodia_2019_stabilized_reservoir_Cambodia')
+var reservoir_2020 = ee.Image('users/ak_glaciers/Cambodia_troubleshooting_tc/cambodia_2020_stabilized_reservoir_Cambodia')
+var reservoir_2021 = ee.Image('users/ak_glaciers/Cambodia_troubleshooting_tc/cambodia_2021_stabilized_reservoir_Cambodia')
 
 
 //original servir composites 
 var ser_2011 = ee.Image("projects/servir-mekong/composites/2011");
+var ser_2012 = ee.Image("projects/servir-mekong/composites/2012");
+var ser_2013 = ee.Image("projects/servir-mekong/composites/2013");
+var ser_2014 = ee.Image("projects/servir-mekong/composites/2014");
+var ser_2015 = ee.Image("projects/servir-mekong/composites/2015");
+var ser_2016 = ee.Image("projects/servir-mekong/composites/2016");
+var ser_2017 = ee.Image("projects/servir-mekong/composites/2017");
+var ser_2018 = ee.Image("projects/servir-mekong/composites/2018");
+var ser_2019 = ee.Image("projects/servir-mekong/composites/2019");
+var ser_2020 = ee.Image("projects/servir-mekong/composites/2020");
+var ser_2021 = ee.Image("projects/servir-mekong/composites/2021");
 
 // map panel
 var map = ui.Map();
@@ -314,33 +333,31 @@ map.add(processingLabel);
 map.setCenter(106.3, 13.5, 12);
 
 //map.layers().set(0,ui.Map.Layer(optimized_output,{min:1990,max:2021},"SERVIR Vertex Image",0))
-map.layers().set(1,ui.Map.Layer(config.param.kmeans_img,visKmeansClusters,"Kmeans Image",0))
+map.layers().set(1,ui.Map.Layer(params.kmeans_img,visKmeansClusters,"Kmeans Image",0))
 
-map.layers().set(2,ui.Map.Layer(config.param.ltopStack.select(['0_B5_fit','0_B4_fit','0_B3_fit']),{min:0,max:6000,bands:['0_B5_fit','0_B4_fit','0_B3_fit']},'2011',0))
-map.layers().set(3,ui.Map.Layer(config.param.ltopStack.select(['1_B5_fit','1_B4_fit','1_B3_fit']),{min:0,max:6000,bands:['1_B5_fit','1_B4_fit','1_B3_fit']},'2012',0))
-map.layers().set(4,ui.Map.Layer(config.param.ltopStack.select(['2_B5_fit','2_B4_fit','2_B3_fit']),{min:0,max:6000,bands:['2_B5_fit','2_B4_fit','2_B3_fit']},'2013',0))
-map.layers().set(5,ui.Map.Layer(config.param.ltopStack.select(['3_B5_fit','3_B4_fit','3_B3_fit']),{min:0,max:6000,bands:['3_B5_fit','3_B4_fit','3_B3_fit']},'2014',0))
-map.layers().set(6,ui.Map.Layer(config.param.ltopStack.select(['4_B5_fit','4_B4_fit','4_B3_fit']),{min:0,max:6000,bands:['4_B5_fit','4_B4_fit','4_B3_fit']},'2015',0))
-map.layers().set(7,ui.Map.Layer(config.param.ltopStack.select(['5_B5_fit','5_B4_fit','5_B3_fit']),{min:0,max:6000,bands:['5_B5_fit','5_B4_fit','5_B3_fit']},'216',0))
-map.layers().set(8,ui.Map.Layer(config.param.ltopStack.select(['6_B5_fit','6_B4_fit','6_B3_fit']),{min:0,max:6000,bands:['6_B5_fit','6_B4_fit','6_B3_fit']},'2017',0))
-map.layers().set(9,ui.Map.Layer(config.param.ltopStack.select(['7_B5_fit','7_B4_fit','7_B3_fit']),{min:0,max:6000,bands:['7_B5_fit','7_B4_fit','7_B3_fit']},'2018',1))
-map.layers().set(10,ui.Map.Layer(config.param.ltopStack.select(['8_B5_fit','8_B4_fit','8_B3_fit']),{min:0,max:6000,bands:['8_B5_fit','8_B4_fit','8_B3_fit']},'2019',0))
-map.layers().set(11,ui.Map.Layer(config.param.ltopStack.select(['9_B5_fit','9_B4_fit','9_B3_fit']),{min:0,max:6000,bands:['9_B5_fit','9_B4_fit','9_B3_fit']},'2020',0))
-map.layers().set(12,ui.Map.Layer(config.param.ltopStack.select(['10_B5_fit','10_B4_fit','10_B3_fit']),{min:0,max:6000,bands:['10_B5_fit','10_B4_fit','10_B3_fit']},'2021',0))
+map.layers().set(2,ui.Map.Layer(reservoir_2011,{min:0,max:6000,bands:['B5_fit','B4_fit','B3_fit']},'2011',0))
+map.layers().set(3,ui.Map.Layer(reservoir_2012,{min:0,max:6000,bands:['B5_fit','B4_fit','B3_fit']},'2012',0))
+map.layers().set(4,ui.Map.Layer(reservoir_2013,{min:0,max:6000,bands:['B5_fit','B4_fit','B3_fit']},'2013',0))
+map.layers().set(5,ui.Map.Layer(reservoir_2014,{min:0,max:6000,bands:['B5_fit','B4_fit','B3_fit']},'2014',0))
+map.layers().set(6,ui.Map.Layer(reservoir_2015,{min:0,max:6000,bands:['B5_fit','B4_fit','B3_fit']},'2015',0))
+map.layers().set(7,ui.Map.Layer(reservoir_2016,{min:0,max:6000,bands:['B5_fit','B4_fit','B3_fit']},'2016',0))
+map.layers().set(8,ui.Map.Layer(reservoir_2017,{min:0,max:6000,bands:['B5_fit','B4_fit','B3_fit']},'2017',0))
+map.layers().set(9,ui.Map.Layer(reservoir_2018,{min:0,max:6000,bands:['B5_fit','B4_fit','B3_fit']},'2018',1))
+map.layers().set(10,ui.Map.Layer(reservoir_2019,{min:0,max:6000,bands:['B5_fit','B4_fit','B3_fit']},'2019',0))
+map.layers().set(11,ui.Map.Layer(reservoir_2020,{min:0,max:6000,bands:['B5_fit','B4_fit','B3_fit']},'2020',0))
+map.layers().set(12,ui.Map.Layer(reservoir_2021,{min:0,max:6000,bands:['B5_fit','B4_fit','B3_fit']},'2021',0))
 
-
-map.layers().set(13,ui.Map.Layer(config.param.servirStack.select(['2011_swir1','2011_nir','2011_red']),{min:0,max:6000,bands:['2011_swir1','2011_nir','2011_red']},'2011 ser',0));
-map.layers().set(14,ui.Map.Layer(config.param.servirStack.select(['2012_swir1','2012_nir','2012_red']),{min:0,max:6000,bands:['2012_swir1','2012_nir','2012_red']},'2012 ser',0));
-map.layers().set(15,ui.Map.Layer(config.param.servirStack.select(['2013_swir1','2013_nir','2013_red']),{min:0,max:6000,bands:['2013_swir1','2013_nir','2013_red']},'2013 ser',0));
-map.layers().set(16,ui.Map.Layer(config.param.servirStack.select(['2014_swir1','2014_nir','2014_red']),{min:0,max:6000,bands:['2014_swir1','2014_nir','2014_red']},'2014 ser',0));
-map.layers().set(17,ui.Map.Layer(config.param.servirStack.select(['2015_swir1','2015_nir','2015_red']),{min:0,max:6000,bands:['2015_swir1','2015_nir','2015_red']},'2015 ser',0));
-map.layers().set(18,ui.Map.Layer(config.param.servirStack.select(['2016_swir1','2016_nir','2016_red']),{min:0,max:6000,bands:['2016_swir1','2016_nir','2016_red']},'2016 ser',0));
-map.layers().set(19,ui.Map.Layer(config.param.servirStack.select(['2017_swir1','2017_nir','2017_red']),{min:0,max:6000,bands:['2017_swir1','2017_nir','2017_red']},'2017 ser',0));
-map.layers().set(20,ui.Map.Layer(config.param.servirStack.select(['2018_swir1','2018_nir','2018_red']),{min:0,max:6000,bands:['2018_swir1','2018_nir','2018_red']},'2018 ser',1));
-map.layers().set(21,ui.Map.Layer(config.param.servirStack.select(['2019_swir1','2019_nir','2019_red']),{min:0,max:6000,bands:['2019_swir1','2019_nir','2019_red']},'2019 ser',0));
-map.layers().set(22,ui.Map.Layer(config.param.servirStack.select(['2020_swir1','2020_nir','2020_red']),{min:0,max:6000,bands:['2020_swir1','2020_nir','2020_red']},'2020 ser',0));
-map.layers().set(23,ui.Map.Layer(config.param.servirStack.select(['2021_swir1','2021_nir','2021_red']),{min:0,max:6000,bands:['2021_swir1','2021_nir','2021_red']},'2021 ser',0));
-
+map.layers().set(13,ui.Map.Layer(ser_2011,{min:0,max:6000,bands:['swir1','nir','red']},'2011 ser',0));
+map.layers().set(14,ui.Map.Layer(ser_2012,{min:0,max:6000,bands:['swir1','nir','red']},'2012 ser',0));
+map.layers().set(15,ui.Map.Layer(ser_2013,{min:0,max:6000,bands:['swir1','nir','red']},'2013 ser',0));
+map.layers().set(16,ui.Map.Layer(ser_2014,{min:0,max:6000,bands:['swir1','nir','red']},'2014 ser',0));
+map.layers().set(17,ui.Map.Layer(ser_2015,{min:0,max:6000,bands:['swir1','nir','red']},'2015 ser',0));
+map.layers().set(18,ui.Map.Layer(ser_2016,{min:0,max:6000,bands:['swir1','nir','red']},'2016 ser',0));
+map.layers().set(19,ui.Map.Layer(ser_2017,{min:0,max:6000,bands:['swir1','nir','red']},'2017 ser',0));
+map.layers().set(20,ui.Map.Layer(ser_2018,{min:0,max:6000,bands:['swir1','nir','red']},'2018 ser',1));
+map.layers().set(21,ui.Map.Layer(ser_2019,{min:0,max:6000,bands:['swir1','nir','red']},'2019 ser',0));
+map.layers().set(22,ui.Map.Layer(ser_2020,{min:0,max:6000,bands:['swir1','nir','red']},'2020 ser',0));
+map.layers().set(23,ui.Map.Layer(ser_2021,{min:0,max:6000,bands:['swir1','nir','red']},'2021 ser',0));
 
 // index panel
 var indexList = [['NBR',-1], ['NDVI',-1], ['EVI',-1], ['NDMI',-1], ['TCB',1], ['TCG',-1],
