@@ -333,7 +333,7 @@ map.add(processingLabel);
 map.setCenter(106.3, 13.5, 12);
 
 //map.layers().set(0,ui.Map.Layer(optimized_output,{min:1990,max:2021},"SERVIR Vertex Image",0))
-map.layers().set(1,ui.Map.Layer(params.kmeans_img,visKmeansClusters,"Kmeans Image",0))
+map.layers().set(1,ui.Map.Layer(params.param.kmeans_img,{"opacity":1,"min":0,"max":200,"palette":["ff0000","fff800","0fff00","002aff","fc00ff"]},"Kmeans Image",0))
 
 map.layers().set(2,ui.Map.Layer(reservoir_2011,{min:0,max:6000,bands:['B5_fit','B4_fit','B3_fit']},'2011',0))
 map.layers().set(3,ui.Map.Layer(reservoir_2012,{min:0,max:6000,bands:['B5_fit','B4_fit','B3_fit']},'2012',0))
