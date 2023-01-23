@@ -36,7 +36,7 @@ for (var i in timelist){
   count+=1
 }
 
-param.servirStack = ee.ImageCollection(param.servirComplist).toBands()
+param.servirStack = ee.ImageCollection(param.servirComplist).map(function(img){var yr = img.get('year'); return img.set('system:index', yr.toString())})
 
 // empty list -- this list will be populated with images 
 param.ltopCompList = []
@@ -53,7 +53,7 @@ for (var ii in timelist){
   count2+=1
 }
 
-param.ltopStack = ee.ImageCollection(param.ltopCompList).toBands()
+param.ltopStack = ee.ImageCollection(param.ltopCompList).map(function(img){var yr = img.get('year'); return img.set('system:index', yr.toString())})
 
 
 
