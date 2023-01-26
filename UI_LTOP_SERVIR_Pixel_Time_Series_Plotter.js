@@ -406,6 +406,23 @@ map.onClick(function(coords) {
   var bestModelProportion_selected = ee.Number(selectedParams.get('bestModelProportion')).getInfo()
   var cluster_k = ee.Number(selectedParams.get('cluster_id')).getInfo()
   print(ind)
+  
+  indexBox[0].setValue(0);
+  indexBox[1].setValue(0);
+  indexBox[2].setValue(0);
+  indexBox[3].setValue(0);
+  indexBox[4].setValue(0);
+  indexBox[5].setValue(0);
+  indexBox[6].setValue(0);
+  indexBox[7].setValue(0);
+  indexBox[8].setValue(0);
+  indexBox[9].setValue(0);
+  indexBox[10].setValue(0);
+  indexBox[11].setValue(0);
+  indexBox[12].setValue(0);
+  indexBox[13].setValue(0);
+  
+  
   indexBox[ind.getInfo()].setValue(1);
 
   //print("selected index", eindex_selected))
