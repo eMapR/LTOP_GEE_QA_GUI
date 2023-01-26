@@ -54,7 +54,8 @@ The application is run from a parameter file that uses these datasets and parame
 
    4.  The two charts show the same type of information but for two different locations. The clicked point and the point used in the parameter selection. The lines and points in the charts means several things. 
 
-      1. Red line 
-      2. Red dots 
-      3. Black dots 
-      4. Blue line 
+      1. Red line - This line is the fitted line from LandTrendr 
+      2. Red dots - The red dots so the breakpoint the for the fitted imagery which should match the location of the black dots on the x axis.
+      3. Black dots - The black dots are the break point locations from the first fitting in the work flow before an index is fitted to them. 
+      4. Blue line - the blue line is the soucre iamgery on which LandTrendr smoothing. 
+3.After clicking a locaton the are eidtable to view different parameter fittings. 
